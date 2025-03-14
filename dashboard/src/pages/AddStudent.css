@@ -1,0 +1,158 @@
+/* General Styles */
+body {
+  background-color: #f4f4f9;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #333;
+  color: white;
+  padding: 20px;
+}
+
+/* Student Info Section */
+.studentInfo {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  margin-left: 15%;
+  padding: 20px;
+}
+
+/* Table Styling */
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.student-table th, 
+.student-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.student-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.student-table td {
+  min-width: 120px;
+  max-width: 250px;
+  overflow-wrap: break-word; 
+}
+
+/* Responsive Table */
+@media screen and (max-width: 768px) {
+  .student-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.button-group .MuiButton-root {
+  font-size: 14px;
+  padding: 6px 12px;
+}
+
+/* Action Icons */
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.MuiSvgIcon-root {
+  font-size: 20px;
+}
+
+/* Circular Add Button */
+.addButt {
+  background-color: #1976d2; /* MUI Primary Blue */
+  color: white;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+}
+
+.addButt:hover {
+  background-color: #1565c0; /* Slightly darker on hover */
+  transform: scale(1.1);
+}
+
+.addButt svg {
+  font-size: 24px;
+}
+
+/* Edit Button */
+.edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-box h2 {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.modal-box .MuiTextField-root {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.modal-buttons .MuiButton-root {
+  width: 48%;
+  font-size: 14px;
+}
