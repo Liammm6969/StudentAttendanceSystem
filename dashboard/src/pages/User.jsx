@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './AddStudent.css';
+import './User.css';
 import Sidebar from './Sidebar.jsx';
 import TextField from '@mui/material/TextField';
 import { Button, Modal, Box, IconButton } from '@mui/material/';
@@ -7,31 +7,31 @@ import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 
-function AddStudent() {
-  const [students, setStudents] = useState([]);
-  const [editingStudent, setEditingStudent] = useState(null);
+function User() {
+  const [users, setUsers] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
 
   const [formData, setFormData] = useState({
-    idStud: '',
+    userId: '',
     firstName: '',
     lastName: '',
     middleName: '',
-    course: '',
-    year: ''
+    userName: '',
+    password: ''
   });
 
   useEffect(() => {
-    fetchStudents();
+    fetchUsers();
   }, []);
 
-  async function fetchStudents() {
+  async function fetchUsers() {
     try {
-      const { data } = await axios.get("http://localhost:1337/fetchstudents");
-      setStudents(data);
+      const { data } = await axios.get("http://localhost:1337/fetchusers");
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Error fetching users:", error);
     }
   }
 
@@ -40,47 +40,51 @@ function AddStudent() {
     setFormData(prev => ({ ...prev, [name]: value }));
   }
 
-  async function handleAddStudent() {
+  async function handleAddUser() {
     try {
-      await axios.post("http://localhost:1337/addstudents", formData);
-      console.log("Added Student:", formData);
-      fetchStudents();
+      await axios.post("http://localhost:1337/addusers", formData);
+      console.log("Added User:", formData);
+      fetchUsers();
       setOpenAdd(false);
-      setFormData({ idStud: '', firstName: '', lastName: '', middleName: '', course: '', year: '' });
+      setFormData({ 
+        userId: '', 
+        firstName: '', 
+        lastName: '', 
+        middleName: '', 
+        userName: '', 
+        password: '' });
     } catch (error) {
-      console.error("Error adding student:", error);
+      console.error("Error adding user:", error);
     }
   }
 
   async function handleSaveChanges() {
-    if (!editingStudent) return;
+    if (!editingUser) return;
     try {
-      await axios.put(`http://localhost:1337/updatestudent/${editingStudent.idStud}`, formData);
-      fetchStudents();
+      await axios.put(`http://localhost:1337/updateuser/${editingUser.userId}`, formData);
+      fetchUsers();
       setOpenEdit(false);
-      setEditingStudent(null);
-      console.log(formData)
+      setEditingUser(null);
     } catch (error) {
-      console.error("Error updating student:", error);
+      console.error("Error updating user:", error);
     }
   }
 
-  function handleEdit(student) {
-    setEditingStudent(student);
-    setFormData(student);
+  function handleEdit(user) {
+    setEditingUser(user);
+    setFormData(user);
     setOpenEdit(true);
   }
 
- 
   function handleOpenAddModal() {
-    setEditingStudent(null);
+    setEditingUser(null);
     setFormData({
-      idStud: '',
+      userId: '',
       firstName: '',
       lastName: '',
       middleName: '',
-      course: '',
-      year: ''
+      userName: '',
+      password: ''
     });
     setOpenAdd(true);
   }
@@ -89,34 +93,34 @@ function AddStudent() {
     <>
       <Sidebar />
       <div className='container'>
-        <div className='studentInfo'>
-          <h2>Student Information</h2>
+        <div className='userInfo'>
+          <h2>User Management</h2>
           <IconButton className='addButt' onClick={handleOpenAddModal}>
             <PersonAddAlt1Icon />
           </IconButton>
-          <table className="student-table">
+          <table className="user-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>User ID</th>
                 <th>First Name</th>
                 <th>Last Name</th>
                 <th>Middle Name</th>
-                <th>Course</th>
-                <th>Year</th>
+                <th>Username</th>
+                <th>Password</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => (
+              {users.map((user, index) => (
                 <tr key={index}>
-                  <td>{student.idStud}</td>
-                  <td>{student.firstName}</td>
-                  <td>{student.lastName}</td>
-                  <td>{student.middleName}</td>
-                  <td>{student.course}</td>
-                  <td>{student.year}</td>
+                  <td>{user.userId}</td>
+                  <td>{user.firstName}</td>
+                  <td>{user.lastName}</td>
+                  <td>{user.middleName}</td>
+                  <td>{user.userName}</td>
+                  <td>{user.password}</td>
                   <td className="table-actions">
-                    <Button onClick={() => handleEdit(student)}>
+                    <Button onClick={() => handleEdit(user)}>
                       <EditIcon fontSize="small" />
                     </Button>
                   </td>
@@ -127,32 +131,30 @@ function AddStudent() {
         </div>
       </div>
 
-      
       <Modal open={openAdd} onClose={() => setOpenAdd(false)}>
         <Box className='modal-box'>
-          <h2>Add Student</h2>
-          <TextField name='idStud' label="ID No" value={formData.idStud} onChange={handleChange} />
+          <h2>Add User</h2>
+          <TextField name='userId' label="User ID" value={formData.userId} onChange={handleChange} />
           <TextField name='firstName' label="First Name" value={formData.firstName} onChange={handleChange} />
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />
-          <TextField name='course' label="Course" value={formData.course} onChange={handleChange} />
-          <TextField name='year' label="Year" value={formData.year} onChange={handleChange} />
+          <TextField name='userName' label="Username" value={formData.userName} onChange={handleChange} />
+          <TextField name='password' label="Password" type="password" value={formData.password} onChange={handleChange} />
           <div className="modal-buttons">
-            <Button onClick={handleAddStudent}>Add Student</Button>
+            <Button onClick={handleAddUser}>Add User</Button>
             <Button onClick={() => setOpenAdd(false)}>Cancel</Button>
           </div>
         </Box>
       </Modal>
 
-      
       <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
         <Box className='modal-box'>
-          <h2>Edit Student</h2>
+          <h2>Edit User</h2>
           <TextField name='firstName' label="First Name" value={formData.firstName} onChange={handleChange} />
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />
-          <TextField name='course' label="Course" value={formData.course} onChange={handleChange} />
-          <TextField name='year' label="Year" value={formData.year} onChange={handleChange} />
+          <TextField name='userName' label="Username" value={formData.userName} onChange={handleChange} />
+          <TextField name='password' label="Password" type="password" value={formData.password} onChange={handleChange} />
           <div className="modal-buttons">
             <Button onClick={handleSaveChanges}>Save Changes</Button>
             <Button onClick={() => setOpenEdit(false)}>Cancel</Button>
@@ -163,4 +165,4 @@ function AddStudent() {
   );
 }
 
-export default AddStudent;
+export default User;

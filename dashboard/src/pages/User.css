@@ -1,0 +1,124 @@
+/* UserManagement.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .userInfo {
+    width: 90%;
+    max-width: 1000px;
+    text-align: center;
+  }
+  
+  h2 {
+    color: #333;
+  }
+  
+  .addButt {
+    background-color: #007bff;
+    color: white;
+    margin-left: 10px;
+    transition: 0.3s;
+  }
+  
+  .addButt:hover {
+    background-color: #0056b3;
+  }
+  
+  .user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .user-table th, .user-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .user-table th {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .user-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .user-table tr:hover {
+    background-color: #ddd;
+  }
+  
+  .table-actions {
+    text-align: center;
+  }
+  
+  .table-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #007bff;
+  }
+  
+  .table-actions button:hover {
+    color: #0056b3;
+  }
+  
+  /* Modal styles */
+  .modal-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .modal-box h2 {
+    margin-bottom: 20px;
+  }
+  
+  .modal-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .modal-buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .modal-buttons button:first-child {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .modal-buttons button:first-child:hover {
+    background-color: #0056b3;
+  }
+  
+  .modal-buttons button:last-child {
+    background-color: #ccc;
+  }
+  
+  .modal-buttons button:last-child:hover {
+    background-color: #bbb;
+  }
+  
+  /* Input Fields */
+  .MuiTextField-root {
+    margin-bottom: 15px !important;
+    width: 100%;
+  }
+  

@@ -156,3 +156,10 @@ body {
   width: 48%;
   font-size: 14px;
 }
+
+
+@media screen {
+  .modal-box{
+    display: flex;
+  }
+}

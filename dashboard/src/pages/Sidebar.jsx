@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
 import AddTaskIcon from '@mui/icons-material/AddTask';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 function Sidebar() {
     return (
 
@@ -27,6 +28,13 @@ function Sidebar() {
         <AddTaskIcon className="icon" />
         <Link to="/TaskTracker" className="link">
         <p>TASK TRACKER</p>
+        </Link>
+        </div>
+
+        <div className="menu">
+        <AccountCircleIcon className="icon" />
+        <Link to="/User" className="link">
+        <p>USER</p>
         </Link>
         </div>
 

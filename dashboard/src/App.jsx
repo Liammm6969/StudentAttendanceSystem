@@ -4,6 +4,7 @@ import {BrowserRouter,Routes,Route} from "react-router-dom"
 import Homee from './pages/Dashboard.jsx'
 import AddStudents from './pages/AddStudent.jsx'
 import TaskTracker from './pages/TaskTracket.jsx'
+import User from './pages/User.jsx'
 function App() {
   return (
   <>
@@ -12,6 +13,7 @@ function App() {
       <Route path="/" element={<Homee />}></Route>
       <Route path="/students" element={<AddStudents />}></Route>
       <Route path="/tasktracker" element={<TaskTracker />}></Route>
+      <Route path="/user" element={<User />}></Route>
     </Routes>
     </BrowserRouter>
   </>
