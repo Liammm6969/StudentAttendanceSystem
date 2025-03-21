@@ -7,11 +7,9 @@ const port = 1337;
 const usersFile = "users.json";
 const studentsFile = "students.json";
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Helper functions
 function readData(file) {
     if (!fs.existsSync(file)) return [];
     return JSON.parse(fs.readFileSync(file));
@@ -19,13 +17,6 @@ function readData(file) {
 
 function writeData(file, data) {
     fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
-
-function addRecord(file, newRecord) {
-    var records = readData(file);
-    records.push(newRecord);
-    writeData(file, records);
-    return newRecord;
 }
 
 function updateRecord(file, id, updatedRecord, idField) {
@@ -39,13 +30,26 @@ function updateRecord(file, id, updatedRecord, idField) {
     return updatedRecord;
 }
 
+app.post("/login", (req, res) => {
+    let users = readData(usersFile);
+    const { userName, password } = req.body;
+
+    const user = users.find(user => user.userName === userName && user.password === password);
+    
+    if (user) {
+        res.status(200).json({ message: "Login successful", user });
+    } else {
+        res.status(401).json({ message: "Invalid username or password" });
+    }
+});
+
 // Routes
 app.get("/fetchstudents", function(req, res) {
     res.json(readData(studentsFile));
 });
 
 app.post("/addstudents", function(req, res) {
-    res.status(201).json(addRecord(studentsFile, req.body));
+    res.status(201).json({ message: "Student added successfully (not saved)", student: req.body });
 });
 
 app.put("/updatestudent/:id", function(req, res) {
@@ -59,7 +63,10 @@ app.get("/fetchusers", function(req, res) {
 });
 
 app.post("/addusers", function(req, res) {
-    res.status(201).json(addRecord(usersFile, req.body));
+    let users = readData(usersFile);
+    users.push(req.body);
+    writeData(usersFile, users);
+    res.status(201).json(req.body);
 });
 
 app.put("/updateuser/:id", function(req, res) {
@@ -67,6 +74,20 @@ app.put("/updateuser/:id", function(req, res) {
     if (updated) res.json(updated);
     else res.status(404).json({ message: "User not found" });
 });
+
+app.delete("/deleteuser/:id", function(req, res){
+    let { id } = req.params;
+    let User = JSON.parse(fs.readFileSync("users.json", "utf-8"));
+  
+    User = User.filter((User) => User.userId !== id);
+  
+    fs.writeFileSync("users.json", JSON.stringify(User, null, 2));
+    res.status(200).json({
+      message: "User Deleted",
+      User,
+    });
+});
+
 
 app.get("/", function(req, res) {
     res.send("Hello, World!");

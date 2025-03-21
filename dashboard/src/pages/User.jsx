@@ -6,6 +6,7 @@ import { Button, Modal, Box, IconButton } from '@mui/material/';
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 
 function User() {
   const [users, setUsers] = useState([]);
@@ -42,22 +43,30 @@ function User() {
 
   async function handleAddUser() {
     try {
+      const { data: users } = await axios.get("http://localhost:1337/fetchusers");
+      const exists = users.some(user => user.userName === formData.userName);
+  
+      if (exists) {
+        alert("Username already exists!");
+        return;
+      }
       await axios.post("http://localhost:1337/addusers", formData);
-      console.log("Added User:", formData);
       fetchUsers();
       setOpenAdd(false);
-      setFormData({ 
-        userId: '', 
-        firstName: '', 
-        lastName: '', 
-        middleName: '', 
-        userName: '', 
-        password: '' });
     } catch (error) {
       console.error("Error adding user:", error);
     }
   }
-
+  
+  async function handleDelete(id){
+    try{
+      await axios.delete(`http://localhost:1337/deleteuser/${id}`);
+      fetchUsers();
+    } catch(error){
+      console.error("Error deleting user", error)
+    }
+   
+  }
   async function handleSaveChanges() {
     if (!editingUser) return;
     try {
@@ -122,7 +131,10 @@ function User() {
                   <td className="table-actions">
                     <Button onClick={() => handleEdit(user)}>
                       <EditIcon fontSize="small" />
-                    </Button>
+                    </Button> 
+                    <Button onClick={() => handleDelete(user.userId)}>
+                      <PersonRemoveIcon fontSize='small'/>
+                      </Button>
                   </td>
                 </tr>
               ))}

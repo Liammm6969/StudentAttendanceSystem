@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import {BrowserRouter,Routes,Route} from "react-router-dom"
+import Login from './pages/Login.jsx'
 import Homee from './pages/Dashboard.jsx'
 import AddStudents from './pages/AddStudent.jsx'
 import TaskTracker from './pages/TaskTracket.jsx'
@@ -10,7 +11,8 @@ function App() {
   <>
     <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Homee />}></Route>
+      <Route path="/" element={<Login />}></Route>
+      <Route path="/home" element={<Homee />}></Route>
       <Route path="/students" element={<AddStudents />}></Route>
       <Route path="/tasktracker" element={<TaskTracker />}></Route>
       <Route path="/user" element={<User />}></Route>

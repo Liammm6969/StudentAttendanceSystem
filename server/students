@@ -4,6 +4,14 @@
     "firstName": "w",
     "lastName": "w",
     "middleName": "w",
+    "course": "1",
+    "year": "w"
+  },
+  {
+    "idStud": "2",
+    "firstName": "w",
+    "lastName": "w",
+    "middleName": "w",
     "course": "w",
     "year": "w"
   }

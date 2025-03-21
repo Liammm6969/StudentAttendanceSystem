@@ -5,6 +5,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
 import AddTaskIcon from '@mui/icons-material/AddTask';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LogoutIcon from '@mui/icons-material/Logout';
 function Sidebar() {
     return (
 
@@ -12,7 +13,7 @@ function Sidebar() {
         <div className="sidebar">
         <div className="menu">
         <HomeIcon className="icon"/>
-        <Link to="/" className="link">
+        <Link to="/home" className="link">
         <p >HOME</p>
         </Link>
         </div>
@@ -35,6 +36,13 @@ function Sidebar() {
         <AccountCircleIcon className="icon" />
         <Link to="/User" className="link">
         <p>USER</p>
+        </Link>
+        </div>
+
+        <div className="menu">
+        <LogoutIcon className="icon" />
+        <Link to="/" className="link">
+        <p>Logout</p>
         </Link>
         </div>
 
