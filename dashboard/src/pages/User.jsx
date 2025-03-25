@@ -13,7 +13,7 @@ function User() {
   const [editingUser, setEditingUser] = useState(null);
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     userId: '',
     firstName: '',
@@ -52,6 +52,7 @@ function User() {
       }
       await axios.post("http://localhost:1337/addusers", formData);
       fetchUsers();
+      console.log("Successfuly Added User: ", formData)
       setOpenAdd(false);
     } catch (error) {
       console.error("Error adding user:", error);
@@ -151,7 +152,7 @@ function User() {
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />
           <TextField name='userName' label="Username" value={formData.userName} onChange={handleChange} />
-          <TextField name='password' label="Password" type="password" value={formData.password} onChange={handleChange} />
+          <TextField name='password' label="Password" value={formData.password} onChange={handleChange} />
           <div className="modal-buttons">
             <Button onClick={handleAddUser}>Add User</Button>
             <Button onClick={() => setOpenAdd(false)}>Cancel</Button>
@@ -162,11 +163,12 @@ function User() {
       <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
         <Box className='modal-box'>
           <h2>Edit User</h2>
+          <TextField name='userId' label="User ID" value={formData.userId} onChange={handleChange} disabled/>
           <TextField name='firstName' label="First Name" value={formData.firstName} onChange={handleChange} />
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />
           <TextField name='userName' label="Username" value={formData.userName} onChange={handleChange} />
-          <TextField name='password' label="Password" type="password" value={formData.password} onChange={handleChange} />
+          <TextField name='password' label="Password" value={formData.password} onChange={handleChange} />
           <div className="modal-buttons">
             <Button onClick={handleSaveChanges}>Save Changes</Button>
             <Button onClick={() => setOpenEdit(false)}>Cancel</Button>

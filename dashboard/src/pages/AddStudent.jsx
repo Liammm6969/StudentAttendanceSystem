@@ -148,6 +148,7 @@ function AddStudent() {
       <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
         <Box className='modal-box'>
           <h2>Edit Student</h2>
+          <TextField name='idStud' label="ID No" value={formData.idStud} onChange={handleChange} disabled />
           <TextField name='firstName' label="First Name" value={formData.firstName} onChange={handleChange} />
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />

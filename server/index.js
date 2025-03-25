@@ -49,11 +49,14 @@ app.get("/fetchstudents", function(req, res) {
 });
 
 app.post("/addstudents", function(req, res) {
-    res.status(201).json({ message: "Student added successfully (not saved)", student: req.body });
+    let students = readData(studentsFile);
+    students.push(req.body);
+    writeData(studentsFile, students);
+    res.status(201).json({ message: "Student added successfully", student: req.body });
 });
 
 app.put("/updatestudent/:id", function(req, res) {
-    var updated = updateRecord(studentsFile, req.params.id, req.body, "idNo");
+    var updated = updateRecord(studentsFile, req.params.id, req.body, "idStud");
     if (updated) res.json(updated);
     else res.status(404).json({ message: "Student not found" });
 });
