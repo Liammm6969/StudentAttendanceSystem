@@ -1,34 +1,22 @@
 const express = require("express");
-const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
 const port = 1337;
-const usersFile = "users.json";
-const studentsFile = "students.json";
+const Student = require("./models/Student.model");
+
+const mongoose = require("mongoose");
+
+mongoose.connect("mongodb://localhost:27017/StudentData")
+.then(() => {
+    console.log("Connected to MongoDB");
+}).catch(err => {
+    console.error("MongoDB connection error:", err);
+});
 
 app.use(cors());
 app.use(express.json());
 
-function readData(file) {
-    if (!fs.existsSync(file)) return [];
-    return JSON.parse(fs.readFileSync(file));
-}
-
-function writeData(file, data) {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
-
-function updateRecord(file, id, updatedRecord, idField) {
-    var records = readData(file);
-    var index = records.findIndex(function(record) {
-        return record[idField] === id;
-    });
-    if (index === -1) return null;
-    records[index] = updatedRecord;
-    writeData(file, records);
-    return updatedRecord;
-}
 
 app.post("/login", (req, res) => {
     let users = readData(usersFile);
@@ -43,54 +31,31 @@ app.post("/login", (req, res) => {
     }
 });
 
-// Routes
-app.get("/fetchstudents", function(req, res) {
-    res.json(readData(studentsFile));
-});
+app.get("/fetchstudents", async (req, res) => {
 
-app.post("/addstudents", function(req, res) {
-    let students = readData(studentsFile);
-    students.push(req.body);
-    writeData(studentsFile, students);
-    res.status(201).json({ message: "Student added successfully", student: req.body });
+    try {
+        const students = await Student.find();
+        res.status(200).json(students);
+    } catch (e) {
+        console.error("Error fetching students:", e);
+        return res.status(500).json({ message: "Error fetching students" });
+    }
 });
+app.post("/addstudent", async (req, res) => {
+    try {
+        const { id, firstName, lastName, middleName, course, year } = req.body;
 
-app.put("/updatestudent/:id", function(req, res) {
-    var updated = updateRecord(studentsFile, req.params.id, req.body, "idStud");
-    if (updated) res.json(updated);
-    else res.status(404).json({ message: "Student not found" });
+        const newStudent = new Student({
+            id, firstName, lastName, middleName, course, year
+        });
+
+         await newStudent.save();
+        res.status(201).json({ message: "Student added successfully", newStudent });
+    } catch (e) {
+        console.error("Error adding student:", e);
+        return res.status(500).json({ message: e.message});
+    }
 });
-
-app.get("/fetchusers", function(req, res) {
-    res.json(readData(usersFile));
-});
-
-app.post("/addusers", function(req, res) {
-    let users = readData(usersFile);
-    users.push(req.body);
-    writeData(usersFile, users);
-    res.status(201).json(req.body);
-});
-
-app.put("/updateuser/:id", function(req, res) {
-    var updated = updateRecord(usersFile, req.params.id, req.body, "userId");
-    if (updated) res.json(updated);
-    else res.status(404).json({ message: "User not found" });
-});
-
-app.delete("/deleteuser/:id", function(req, res){
-    let { id } = req.params;
-    let User = JSON.parse(fs.readFileSync("users.json", "utf-8"));
-  
-    User = User.filter((User) => User.userId !== id);
-  
-    fs.writeFileSync("users.json", JSON.stringify(User, null, 2));
-    res.status(200).json({
-      message: "User Deleted",
-      User,
-    });
-});
-
 
 app.get("/", function(req, res) {
     res.send("Hello, World!");

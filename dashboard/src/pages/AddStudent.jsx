@@ -14,7 +14,7 @@ function AddStudent() {
   const [openEdit, setOpenEdit] = useState(false);
 
   const [formData, setFormData] = useState({
-    idStud: '',
+    id: '',
     firstName: '',
     lastName: '',
     middleName: '',
@@ -29,7 +29,7 @@ function AddStudent() {
   async function fetchStudents() {
     try {
       const { data } = await axios.get("http://localhost:1337/fetchstudents");
-      setStudents(data);
+      setStudents(data);  
     } catch (error) {
       console.error("Error fetching students:", error);
     }
@@ -42,11 +42,11 @@ function AddStudent() {
 
   async function handleAddStudent() {
     try {
-      await axios.post("http://localhost:1337/addstudents", formData);
+      await axios.post("http://localhost:1337/addstudent", formData);
       console.log("Added Student:", formData);
       fetchStudents();
       setOpenAdd(false);
-      setFormData({ idStud: '', firstName: '', lastName: '', middleName: '', course: '', year: '' });
+      setFormData({ id: '', firstName: '', lastName: '', middleName: '', course: '', year: '' });
     } catch (error) {
       console.error("Error adding student:", error);
     }
@@ -109,7 +109,7 @@ function AddStudent() {
             <tbody>
               {students.map((student, index) => (
                 <tr key={index}>
-                  <td>{student.idStud}</td>
+                  <td>{student.id}</td>
                   <td>{student.firstName}</td>
                   <td>{student.lastName}</td>
                   <td>{student.middleName}</td>
@@ -131,7 +131,7 @@ function AddStudent() {
       <Modal open={openAdd} onClose={() => setOpenAdd(false)}>
         <Box className='modal-box'>
           <h2>Add Student</h2>
-          <TextField name='idStud' label="ID No" value={formData.idStud} onChange={handleChange} />
+          <TextField name='id' label="ID No" value={formData.id} onChange={handleChange} />
           <TextField name='firstName' label="First Name" value={formData.firstName} onChange={handleChange} />
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />
@@ -148,7 +148,7 @@ function AddStudent() {
       <Modal open={openEdit} onClose={() => setOpenEdit(false)}>
         <Box className='modal-box'>
           <h2>Edit Student</h2>
-          <TextField name='idStud' label="ID No" value={formData.idStud} onChange={handleChange} disabled />
+          <TextField name='id' label="ID No" value={formData.id} onChange={handleChange} disabled />
           <TextField name='firstName' label="First Name" value={formData.firstName} onChange={handleChange} />
           <TextField name='lastName' label="Last Name" value={formData.lastName} onChange={handleChange} />
           <TextField name='middleName' label="Middle Name" value={formData.middleName} onChange={handleChange} />
