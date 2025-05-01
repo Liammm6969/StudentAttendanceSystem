@@ -56,6 +56,40 @@ app.post("/addstudent", async (req, res) => {
         return res.status(500).json({ message: e.message});
     }
 });
+app.put("/updatestudent/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        const updatedStudent = await Student.findOneAndUpdate({ id }, updateData, { new: true });
+
+        if (!updatedStudent) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        res.status(200).json({ message: "Student updated successfully", updatedStudent });
+    } catch (e) {
+        console.error("Error updating student:", e);
+        return res.status(500).json({ message: "Error updating student" });
+    }
+});
+app.delete("/deletestudent/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const deletedStudent = await Student.findOneAndDelete({ id });
+
+        if (!deletedStudent) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        res.status(200).json({ message: "Student deleted successfully", deletedStudent });
+    } catch (e) {
+        console.error("Error deleting student:", e);
+        res.status(500).json({ message: "Error deleting student" });
+    }
+});
+
 
 app.get("/", function(req, res) {
     res.send("Hello, World!");
