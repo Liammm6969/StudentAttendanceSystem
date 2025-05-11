@@ -1,15 +1,22 @@
-.home{
-    display: flex;
-    flex-direction: row;
-}
-.home-main{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.fields{
-    display: flex;
-    flex-direction: column;
-    padding-left: 10%;
-}
+.home-content {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .home-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .home-content p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+  }
+  
+  .home-content .MuiButton-root {
+    width: 200px;
+    margin-top: 20px;
+  }
+  

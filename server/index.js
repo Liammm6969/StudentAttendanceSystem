@@ -4,6 +4,7 @@ const cors = require("cors");
 const app = express();
 const port = 1337;
 const Student = require("./models/Student.model");
+const User = require("./models/User.model");
 
 const mongoose = require("mongoose");
 
@@ -18,16 +19,21 @@ app.use(cors());
 app.use(express.json());
 
 
-app.post("/login", (req, res) => {
-    let users = readData(usersFile);
-    const { userName, password } = req.body;
-
-    const user = users.find(user => user.userName === userName && user.password === password);
-    
-    if (user) {
-        res.status(200).json({ message: "Login successful", user });
-    } else {
-        res.status(401).json({ message: "Invalid username or password" });
+app.post("/login", async (req, res) => {
+    try {
+        const { userName, password } = req.body;
+        
+        // Find the user with the provided username and password
+        const user = await User.findOne({ userName, password });
+        
+        if (user) {
+            res.status(200).json({ message: "Login successful", user });
+        } else {
+            res.status(401).json({ message: "Invalid username or password" });
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ message: "Server error during login" });
     }
 });
 
@@ -90,6 +96,99 @@ app.delete("/deletestudent/:id", async (req, res) => {
     }
 });
 
+
+// USER
+app.get("/fetchusers", async (req, res) => {
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (e) {
+        console.error("Error fetching users:", e);
+        return res.status(500).json({ message: "Error fetching users" });
+    }
+});
+
+app.post("/adduser", async (req, res) => {
+    try {
+        const { userId, firstName, lastName, middleName, userName, password } = req.body;
+
+        const existingUser = await User.findOne({ 
+            $or: [
+                { userId: userId },
+                { userName: userName }
+            ]
+        });
+
+        if (existingUser) {
+            if (existingUser.userId === userId) {
+                return res.status(400).json({ message: "User ID already exists" });
+            }
+            if (existingUser.userName === userName) {
+                return res.status(400).json({ message: "Username already exists" });
+            }
+        }
+
+        const newUser = new User({
+            userId, firstName, lastName, middleName, userName, password
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: "User added successfully", newUser });
+    } catch (e) {
+        console.error("Error adding user:", e);
+        return res.status(500).json({ message: e.message });
+    }
+});
+
+app.put("/updateuser/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        if (updateData.userName) {
+            const existingUser = await User.findOne({ 
+                userName: updateData.userName,
+                userId: { $ne: id }
+            });
+
+            if (existingUser) {
+                return res.status(400).json({ message: "Username already exists" });
+            }
+        }
+
+        const updatedUser = await User.findOneAndUpdate(
+            { userId: id }, 
+            updateData, 
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ message: "User updated successfully", updatedUser });
+    } catch (e) {
+        console.error("Error updating user:", e);
+        return res.status(500).json({ message: "Error updating user" });
+    }
+});
+
+app.delete("/deleteuser/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const deletedUser = await User.findOneAndDelete({ userId: id });
+
+        if (!deletedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ message: "User deleted successfully", deletedUser });
+    } catch (e) {
+        console.error("Error deleting user:", e);
+        res.status(500).json({ message: "Error deleting user" });
+    }
+});
 
 app.get("/", function(req, res) {
     res.send("Hello, World!");
