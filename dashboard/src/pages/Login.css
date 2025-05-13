@@ -5,6 +5,7 @@
   --accent-color: #ff6b6b;
   --text-color: #2c3e50;
   --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  --error: #FF0000;
 }
 
 
@@ -19,7 +20,7 @@
 }
 
 .login-box {
-  width: 400px;
+  width: 450px;
   background: white;
   border-radius: 20px;
   padding: 40px;
@@ -38,17 +39,18 @@
 }
 
 .input-group input {
-  width: 350px;
+  width: 400px;
   background-color: var(--secondary-color);
   border-radius: 10px;
   font-size: 16px;
   color: var(--text-color);
 }
-
-.MuiInputAdornment-root {
-  margin-right: -35px;
+.show{
+  padding: 12px;
 }
-
+.error-message{
+color: var(--error);
+}
 .forgot-password{
   display: flex;
   justify-content: flex-end ;

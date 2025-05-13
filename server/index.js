@@ -8,6 +8,8 @@ const User = require("./models/User.model");
 
 const mongoose = require("mongoose");
 
+const validator = require("validator")
+
 mongoose.connect("mongodb://localhost:27017/StudentData")
 .then(() => {
     console.log("Connected to MongoDB");
@@ -22,8 +24,7 @@ app.use(express.json());
 app.post("/login", async (req, res) => {
     try {
         const { userName, password } = req.body;
-        
-        // Find the user with the provided username and password
+   
         const user = await User.findOne({ userName, password });
         
         if (user) {

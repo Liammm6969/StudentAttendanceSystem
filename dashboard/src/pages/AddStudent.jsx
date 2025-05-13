@@ -13,6 +13,7 @@ import {
   Snackbar,
 } from "@mui/material/";
 import axios from "axios";
+import validator from "validator";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -39,6 +40,14 @@ function AddStudent() {
     course: "",
     year: "",
   });
+  const [errors, setErrors] = useState({
+    id: "",
+    firstName: "",
+    lastName: "",
+    middleName: "",
+    course: "",
+    year: "",
+  });
 
   useEffect(() => {
     fetchStudents();
@@ -57,6 +66,11 @@ function AddStudent() {
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   }
 
   function showNotification(message, type) {
@@ -67,7 +81,67 @@ function AddStudent() {
     });
   }
 
+  function validateForm() {
+    const newErrors = {};
+    let isValid = true;
+
+    if (validator.isEmpty(formData.id)) {
+      newErrors.id = "ID is required";
+      isValid = false;
+    } else if (!validator.isNumeric(formData.id)) {
+      newErrors.id = "ID must contain only numbers";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.firstName)) {
+      newErrors.firstName = "First name is required";
+      isValid = false;
+    } else if (!validator.isAlpha(formData.firstName)) {
+      newErrors.firstName = "First name should contain only letters";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.lastName)) {
+      newErrors.lastName = "Last name is required";
+      isValid = false;
+    } else if (!validator.isAlpha(formData.lastName)) {
+      newErrors.lastName = "Last name should contain only letters";
+      isValid = false;
+    }
+    if (formData.middleName && !validator.isAlpha(formData.middleName)) {
+      newErrors.middleName = "Middle name should contain only letters";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.course)) {
+      newErrors.course = "Course is required";
+      isValid = false;
+    } else if (!validator.isAlpha(formData.course)) {
+      newErrors.course = "Course should contain only letters";
+      isValid = false;
+    }
+
+    if (validator.isEmpty(formData.year)) {
+      newErrors.year = "Year is required";
+      isValid = false;
+    } else if (!validator.isNumeric(formData.year)) {
+      newErrors.year = "Year must be a number";
+      isValid = false;
+    } else {
+      const yearNum = parseInt(formData.year);
+      if (yearNum < 1 || yearNum > 5) {
+        newErrors.year = "Year must be between 1 and 5";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  }
+
   async function handleAddStudent() {
+    if (!validateForm()) {
+      showNotification("Please fix the form errors", "error");
+      return;
+    }
+
     try {
       await axios.post("http://localhost:1337/addstudent", formData);
       fetchStudents();
@@ -80,15 +154,34 @@ function AddStudent() {
         course: "",
         year: "",
       });
+      setErrors({
+        id: "",
+        firstName: "",
+        lastName: "",
+        middleName: "",
+        course: "",
+        year: "",
+      });
       showNotification("Student added successfully!", "success");
     } catch (error) {
       console.error("Error adding student:", error);
-      showNotification("Failed to add student", "error");
+      
+      if (error.response && error.response.status === 409) {
+        showNotification("Student ID already exists", "error");
+      } else {
+        showNotification("Failed to add student", "error");
+      }
     }
   }
 
   async function handleSaveChanges() {
     if (!editingStudent) return;
+    
+    if (!validateForm()) {
+      showNotification("Please fix the form errors", "error");
+      return;
+    }
+
     try {
       await axios.put(
         `http://localhost:1337/updatestudent/${editingStudent.id}`,
@@ -97,6 +190,14 @@ function AddStudent() {
       fetchStudents();
       setOpenEdit(false);
       setEditingStudent(null);
+      setErrors({
+        id: "",
+        firstName: "",
+        lastName: "",
+        middleName: "",
+        course: "",
+        year: "",
+      });
       showNotification("Student updated successfully!", "success");
     } catch (error) {
       console.error("Error updating student:", error);
@@ -120,12 +221,28 @@ function AddStudent() {
   function handleEdit(student) {
     setEditingStudent(student);
     setFormData(student);
+    setErrors({
+      id: "",
+      firstName: "",
+      lastName: "",
+      middleName: "",
+      course: "",
+      year: "",
+    });
     setOpenEdit(true);
   }
 
   function handleOpenAddModal() {
     setEditingStudent(null);
     setFormData({
+      id: "",
+      firstName: "",
+      lastName: "",
+      middleName: "",
+      course: "",
+      year: "",
+    });
+    setErrors({
       id: "",
       firstName: "",
       lastName: "",
@@ -275,6 +392,9 @@ function AddStudent() {
               fullWidth
               value={formData.id}
               onChange={handleChange}
+              error={!!errors.id}
+              helperText={errors.id}
+              margin="normal"
             />
             <TextField
               name="firstName"
@@ -283,6 +403,9 @@ function AddStudent() {
               fullWidth
               value={formData.firstName}
               onChange={handleChange}
+              error={!!errors.firstName}
+              helperText={errors.firstName}
+              margin="normal"
             />
             <TextField
               name="lastName"
@@ -291,6 +414,9 @@ function AddStudent() {
               fullWidth
               value={formData.lastName}
               onChange={handleChange}
+              error={!!errors.lastName}
+              helperText={errors.lastName}
+              margin="normal"
             />
             <TextField
               name="middleName"
@@ -299,6 +425,9 @@ function AddStudent() {
               fullWidth
               value={formData.middleName}
               onChange={handleChange}
+              error={!!errors.middleName}
+              helperText={errors.middleName}
+              margin="normal"
             />
             <TextField
               name="course"
@@ -307,6 +436,9 @@ function AddStudent() {
               fullWidth
               value={formData.course}
               onChange={handleChange}
+              error={!!errors.course}
+              helperText={errors.course}
+              margin="normal"
             />
             <TextField
               name="year"
@@ -315,6 +447,9 @@ function AddStudent() {
               fullWidth
               value={formData.year}
               onChange={handleChange}
+              error={!!errors.year}
+              helperText={errors.year}
+              margin="normal"
             />
             <div className="modal-buttons">
               <Button
@@ -348,6 +483,7 @@ function AddStudent() {
               value={formData.id}
               onChange={handleChange}
               disabled
+              margin="normal"
             />
             <TextField
               name="firstName"
@@ -356,6 +492,9 @@ function AddStudent() {
               fullWidth
               value={formData.firstName}
               onChange={handleChange}
+              error={!!errors.firstName}
+              helperText={errors.firstName}
+              margin="normal"
             />
             <TextField
               name="lastName"
@@ -364,6 +503,9 @@ function AddStudent() {
               fullWidth
               value={formData.lastName}
               onChange={handleChange}
+              error={!!errors.lastName}
+              helperText={errors.lastName}
+              margin="normal"
             />
             <TextField
               name="middleName"
@@ -372,6 +514,9 @@ function AddStudent() {
               fullWidth
               value={formData.middleName}
               onChange={handleChange}
+              error={!!errors.middleName}
+              helperText={errors.middleName}
+              margin="normal"
             />
             <TextField
               name="course"
@@ -380,6 +525,9 @@ function AddStudent() {
               fullWidth
               value={formData.course}
               onChange={handleChange}
+              error={!!errors.course}
+              helperText={errors.course}
+              margin="normal"
             />
             <TextField
               name="year"
@@ -388,6 +536,9 @@ function AddStudent() {
               fullWidth
               value={formData.year}
               onChange={handleChange}
+              error={!!errors.year}
+              helperText={errors.year}
+              margin="normal"
             />
             <div className="modal-buttons">
               <Button

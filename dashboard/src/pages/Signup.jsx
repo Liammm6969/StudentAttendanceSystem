@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, TextField, Snackbar, Alert, InputAdornment, IconButton } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import axios from 'axios';
+import validator from 'validator';
 import './Signup.css'
 
 function Signup() {
@@ -15,8 +16,21 @@ function Signup() {
     userName: '',
     password: ''
   });
+  const [errors, setErrors] = useState({
+    userId:'',
+    firstName: '',
+    lastName: '',
+    middleName: '',
+    userName: '',
+    password: ''
+  });
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "Registration successful! You can now log in.",
+    type: "success"
+  });
 
   function Login(){
     navigate('/');
@@ -25,33 +39,89 @@ function Signup() {
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   }
 
   function handleCloseSnackbar() {
-    setOpenSnackbar(false);
+    setNotification(prev => ({ ...prev, open: false }));
   }
   
   function handleTogglePasswordVisibility() {
     setShowPassword(prevShowPassword => !prevShowPassword);
   }
 
+  function validateForm() {
+    const newErrors = {};
+    let isValid = true;
+
+    if (validator.isEmpty(formData.userId)) {
+      newErrors.userId = "User ID is required";
+      isValid = false;
+    } else if (!validator.isNumeric(formData.userId)) {
+      newErrors.userId = "User ID must contain only numbers";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.firstName)) {
+      newErrors.firstName = "First name is required";
+      isValid = false;
+    } else if (!validator.isAlpha(formData.firstName)) {
+      newErrors.firstName = "First name should contain only letters";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.lastName)) {
+      newErrors.lastName = "Last name is required";
+      isValid = false;
+    } else if (!validator.isAlpha(formData.lastName)) {
+      newErrors.lastName = "Last name should contain only letters";
+      isValid = false;
+    }
+    if (formData.middleName && !validator.isAlpha(formData.middleName)) {
+      newErrors.middleName = "Middle name should contain only letters";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.userName)) {
+      newErrors.userName = "Username is required";
+      isValid = false;
+    }
+    if (validator.isEmpty(formData.password)) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } 
+    setErrors(newErrors);
+    return isValid;
+  }
+
+  function showNotification(message, type) {
+    setNotification({
+      open: true,
+      message,
+      type,
+    });
+  }
+
   async function handleAddUser() {
+    if (!validateForm()) {
+      showNotification("Please fix the form errors", "error");
+      return;
+    }
+
     try {
       const { data: users } = await axios.get("http://localhost:1337/fetchusers");
       const exists = users.some(user => user.userName === formData.userName);
   
       if (exists) {
-        alert("Username already exists!");
+        showNotification("Username already exists!", "error");
         return;
       }
       
       await axios.post("http://localhost:1337/adduser", formData);
       console.log("Successfully Added User: ", formData);
-
-      // Show success notification
-      setOpenSnackbar(true);
-
-      // Reset form after successful registration
+      
+      showNotification("Registration successful! Redirecting to login...", "success");
+   
       setFormData({
         userId:'',
         firstName: '',
@@ -60,8 +130,21 @@ function Signup() {
         userName: '',
         password: ''
       });
+      setErrors({
+        userId:'',
+        firstName: '',
+        lastName: '',
+        middleName: '',
+        userName: '',
+        password: ''
+      });
+
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
     } catch (error) {
       console.error("Error adding user:", error);
+      showNotification("Registration failed. Please try again.", "error");
     }
   }
 
@@ -75,6 +158,10 @@ function Signup() {
             label="User Id"
             value={formData.userId}
             onChange={handleChange}
+            error={!!errors.userId}
+            helperText={errors.userId}
+            fullWidth
+            margin="normal"
           />
 
           <TextField 
@@ -82,6 +169,21 @@ function Signup() {
             label="First Name"
             value={formData.firstName}
             onChange={handleChange}
+            error={!!errors.firstName}
+            helperText={errors.firstName}
+            fullWidth
+            margin="normal"
+          />
+
+          <TextField 
+            name='middleName'
+            label="Middle Name"
+            value={formData.middleName}
+            onChange={handleChange}
+            error={!!errors.middleName}
+            helperText={errors.middleName}
+            fullWidth
+            margin="normal"
           />
 
           <TextField 
@@ -89,6 +191,10 @@ function Signup() {
             label="Last Name" 
             value={formData.lastName}
             onChange={handleChange}
+            error={!!errors.lastName}
+            helperText={errors.lastName}
+            fullWidth
+            margin="normal"
           />
           
           <TextField 
@@ -96,6 +202,10 @@ function Signup() {
             label="Username"
             value={formData.userName}
             onChange={handleChange}
+            error={!!errors.userName}
+            helperText={errors.userName}
+            fullWidth
+            margin="normal"
           />
           
           <TextField 
@@ -104,6 +214,10 @@ function Signup() {
             type={showPassword ? "text" : "password"}
             value={formData.password}
             onChange={handleChange}
+            error={!!errors.password}
+            helperText={errors.password}
+            fullWidth
+            margin="normal"
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -121,10 +235,11 @@ function Signup() {
           />
           
           <Button 
-          className='subButt'
+            className='subButt'
             type='submit'
             variant='contained'
             onClick={handleAddUser}
+            fullWidth
           >
             Create Account
           </Button>
@@ -134,20 +249,19 @@ function Signup() {
           </div>
         </div>
       </div>
-      
-      {/* Success Notification */}
+ 
       <Snackbar 
-        open={openSnackbar} 
+        open={notification.open} 
         autoHideDuration={6000} 
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert 
           onClose={handleCloseSnackbar} 
-          severity="success" 
+          severity={notification.type} 
           sx={{ width: '100%' }}
         >
-          Registration successful! You can now log in.
+          {notification.message}
         </Alert>
       </Snackbar>
     </>

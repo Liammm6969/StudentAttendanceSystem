@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './User.css';
 import Sidebar from './Sidebar.jsx';
 import TextField from '@mui/material/TextField';
-import { Button, Modal, Box, IconButton, FormControl, InputLabel, OutlinedInput, InputAdornment, IconButton as MuiIconButton, Fade } from '@mui/material/';
+import { Button, Modal, Box, IconButton, FormControl, InputLabel, OutlinedInput, InputAdornment, IconButton as MuiIconButton, Fade, Tooltip } from '@mui/material/';
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -147,7 +147,7 @@ function User() {
             <th>Middle Name</th>
             <th>Username</th>
             <th>Password</th>
-            <th>Actions</th>
+            {/* <th>Actions</th> */}
           </tr>
         </thead>
         <tbody>
@@ -158,15 +158,24 @@ function User() {
               <td>{user.lastName}</td>
               <td>{user.middleName}</td>
               <td>{user.userName}</td>
-              <td>{'•'.repeat(6)}</td>
-              <td className="table-actions">
+              <td>{user.password}</td>
+              {/* <td>{'-'.repeat(6)}</td> */}
+              {/* <td className="table-actions">
+                <Tooltip
+                title="Edit"
+                >
                 <Button onClick={() => handleEdit(user)}>
                   <EditIcon fontSize="small" />
                 </Button> 
+                </Tooltip>
+                <Tooltip
+                title="Delete"
+                >
                 <Button onClick={() => handleDelete(user.userId)}>
                   <PersonRemoveIcon fontSize='small'/>
                 </Button>
-              </td>
+                </Tooltip>
+              </td> */}
             </tr>
           ))}
         </tbody>
