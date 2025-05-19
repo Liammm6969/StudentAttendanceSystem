@@ -1,7 +1,7 @@
 {
-  "name": "c",
+  "name": "attendance-system-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend for attendance management system",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,8 +10,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^5.1.0",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "express-session": "^1.18.0",
     "file-saver": "^2.0.5",
     "mongoose": "^8.13.3",
     "nodemon": "^3.1.9",

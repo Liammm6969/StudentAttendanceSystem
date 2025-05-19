@@ -1,118 +1,76 @@
-const express = require("express");
-const cors = require("cors");
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+
+// Import models
+const User = require('./models/User');
+const Class = require('./models/Class');
+const Enrollment = require('./models/Enrollment');
+const Attendance = require('./models/Attendance');
 
 const app = express();
-const port = 1337;
-const Student = require("./models/Student.model");
-const User = require("./models/User.model");
 
-const mongoose = require("mongoose");
-
-const validator = require("validator")
-
-mongoose.connect("mongodb://localhost:27017/StudentData")
-.then(() => {
-    console.log("Connected to MongoDB");
-}).catch(err => {
-    console.error("MongoDB connection error:", err);
-});
-
-app.use(cors());
+// Middleware
 app.use(express.json());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'user-id', 'Authorization'],
+  credentials: true
+}));
 
-
-app.post("/login", async (req, res) => {
-    try {
-        const { userName, password } = req.body;
-   
-        const user = await User.findOne({ userName, password });
-        
-        if (user) {
-            res.status(200).json({ message: "Login successful", user });
-        } else {
-            res.status(401).json({ message: "Invalid username or password" });
-        }
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).json({ message: "Server error during login" });
-    }
+// Database connection
+mongoose.connect('mongodb://127.0.0.1:27017/attendance-system', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1); // Exit if cannot connect to database
 });
 
-app.get("/fetchstudents", async (req, res) => {
-
-    try {
-        const students = await Student.find();
-        res.status(200).json(students);
-    } catch (e) {
-        console.error("Error fetching students:", e);
-        return res.status(500).json({ message: "Error fetching students" });
+// Simple auth middleware
+const isAuthenticated = async (req, res, next) => {
+  try {
+    const userId = req.headers['user-id'];
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
-});
-app.post("/addstudent", async (req, res) => {
-    try {
-        const { id, firstName, lastName, middleName, course, year } = req.body;
-
-        const newStudent = new Student({
-            id, firstName, lastName, middleName, course, year
-        });
-
-         await newStudent.save();
-        res.status(201).json({ message: "Student added successfully", newStudent });
-    } catch (e) {
-        console.error("Error adding student:", e);
-        return res.status(500).json({ message: e.message});
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
     }
-});
-app.put("/updatestudent/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = req.body;
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Unauthorized' });
+  }
+};
 
-        const updatedStudent = await Student.findOneAndUpdate({ id }, updateData, { new: true });
-
-        if (!updatedStudent) {
-            return res.status(404).json({ message: "Student not found" });
-        }
-
-        res.status(200).json({ message: "Student updated successfully", updatedStudent });
-    } catch (e) {
-        console.error("Error updating student:", e);
-        return res.status(500).json({ message: "Error updating student" });
+// Role-based access control middleware
+const hasRole = (roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Forbidden' });
     }
-});
-app.delete("/deletestudent/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
+    next();
+  };
+};
 
-        const deletedStudent = await Student.findOneAndDelete({ id });
-
-        if (!deletedStudent) {
-            return res.status(404).json({ message: "Student not found" });
-        }
-
-        res.status(200).json({ message: "Student deleted successfully", deletedStudent });
-    } catch (e) {
-        console.error("Error deleting student:", e);
-        res.status(500).json({ message: "Error deleting student" });
+// Auth routes
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    console.log('Registration request received:', req.body);
+    const { userId, firstName, lastName, middleName, userName, password, role } = req.body;
+    
+    // Validate required fields
+    if (!userId || !firstName || !lastName || !userName || !password) {
+      console.log('Missing required fields:', { userId, firstName, lastName, userName, password });
+      return res.status(400).json({ message: 'Missing required fields' });
     }
-});
 
-
-// USER
-app.get("/fetchusers", async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (e) {
-        console.error("Error fetching users:", e);
-        return res.status(500).json({ message: "Error fetching users" });
-    }
-});
-
-app.post("/adduser", async (req, res) => {
-    try {
-        const { userId, firstName, lastName, middleName, userName, password } = req.body;
-
+    // Check for existing user first
         const existingUser = await User.findOne({ 
             $or: [
                 { userId: userId },
@@ -121,80 +79,365 @@ app.post("/adduser", async (req, res) => {
         });
 
         if (existingUser) {
-            if (existingUser.userId === userId) {
-                return res.status(400).json({ message: "User ID already exists" });
-            }
-            if (existingUser.userName === userName) {
-                return res.status(400).json({ message: "Username already exists" });
-            }
-        }
-
-        const newUser = new User({
-            userId, firstName, lastName, middleName, userName, password
-        });
-
-        await newUser.save();
-        res.status(201).json({ message: "User added successfully", newUser });
-    } catch (e) {
-        console.error("Error adding user:", e);
-        return res.status(500).json({ message: e.message });
+      console.log('Existing user found:', {
+        existingUserId: existingUser.userId,
+        existingUserName: existingUser.userName
+      });
+      return res.status(400).json({
+        message: 'Username or User ID already exists',
+        field: existingUser.userId === userId ? 'userId' : 'userName'
+      });
     }
-});
 
-app.put("/updateuser/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = req.body;
+    const user = new User({
+      userId,
+      firstName,
+      lastName,
+      middleName,
+      userName,
+      password,
+      role: role || 'student' // Default to student if role is not specified
+    });
 
-        if (updateData.userName) {
-            const existingUser = await User.findOne({ 
-                userName: updateData.userName,
-                userId: { $ne: id }
-            });
-
-            if (existingUser) {
-                return res.status(400).json({ message: "Username already exists" });
-            }
-        }
-
-        const updatedUser = await User.findOneAndUpdate(
-            { userId: id }, 
-            updateData, 
-            { new: true }
-        );
-
-        if (!updatedUser) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.status(200).json({ message: "User updated successfully", updatedUser });
-    } catch (e) {
-        console.error("Error updating user:", e);
-        return res.status(500).json({ message: "Error updating user" });
+    console.log('Attempting to save user:', user);
+    await user.save();
+    console.log('User saved successfully');
+    res.status(201).json({ 
+      message: 'User registered successfully',
+      user: {
+        id: user._id,
+        username: user.userName,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        userId: user.userId
+      }
+    });
+  } catch (error) {
+    console.error('Registration error details:', error);
+    if (error.code === 11000) {
+      console.error('Duplicate key error details:', error.keyPattern, error.keyValue);
+      res.status(400).json({ 
+        message: 'Username or User ID already exists',
+        details: error.keyValue
+      });
+    } else {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: 'Server error' });
     }
+  }
 });
 
-app.delete("/deleteuser/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ userName: username });
 
-        const deletedUser = await User.findOneAndDelete({ userId: id });
-
-        if (!deletedUser) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.status(200).json({ message: "User deleted successfully", deletedUser });
-    } catch (e) {
-        console.error("Error deleting user:", e);
-        res.status(500).json({ message: "Error deleting user" });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    // Send back all necessary user information
+    res.json({
+      user: {
+        id: user._id,
+        username: user.userName,
+        role: user.role || 'student', // Default to student if role is not set
+        firstName: user.firstName,
+        lastName: user.lastName,
+        userId: user.userId
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.get("/", function(req, res) {
-    res.send("Hello, World!");
+// Protected routes
+app.get('/api/auth/me', isAuthenticated, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.listen(port, function() {
-    console.log("Server running on port " + port);
+// Class routes
+app.post('/api/classes', isAuthenticated, hasRole(['teacher']), async (req, res) => {
+  try {
+    const { name, description, schedule } = req.body;
+    
+    // Generate a random class code
+    const generateCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    };
+
+    // Keep generating codes until we find a unique one
+    let code;
+    let isUnique = false;
+    while (!isUnique) {
+      code = generateCode();
+      const existingClass = await Class.findOne({ code });
+      if (!existingClass) {
+        isUnique = true;
+      }
+    }
+
+    const newClass = new Class({
+      name,
+      description,
+      teacher: req.user._id,
+      schedule,
+      code
+    });
+
+    console.log('Creating new class:', newClass);
+    await newClass.save();
+    console.log('Class created successfully');
+    
+    res.status(201).json(newClass);
+  } catch (error) {
+    console.error('Error creating class:', error);
+    res.status(500).json({ 
+      message: 'Failed to create class',
+      error: error.message 
+    });
+  }
+});
+
+app.get('/api/classes', isAuthenticated, async (req, res) => {
+  try {
+    let classes;
+    if (req.user.role === 'teacher') {
+      // Get teacher's classes
+      classes = await Class.find({ teacher: req.user._id });
+      
+      // Get enrollments for each class
+      const classesWithStudents = await Promise.all(classes.map(async (classItem) => {
+        const enrollments = await Enrollment.find({ 
+          class: classItem._id,
+          status: 'active'
+        }).populate('student', 'firstName lastName userId userName');
+        
+        const classObj = classItem.toObject();
+        classObj.enrolledStudents = enrollments.map(e => e.student);
+        return classObj;
+      }));
+      
+      res.json(classesWithStudents);
+    } else {
+      // For students, get their enrolled classes with teacher information
+      const enrollments = await Enrollment.find({ student: req.user._id, status: 'active' });
+      const classIds = enrollments.map(e => e.class);
+      classes = await Class.find({ _id: { $in: classIds } })
+        .populate('teacher', 'firstName lastName userId userName');
+      res.json(classes);
+    }
+  } catch (error) {
+    console.error('Error fetching classes:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add endpoints for updating and deleting classes
+app.put('/api/classes/:id', isAuthenticated, hasRole(['teacher']), async (req, res) => {
+  try {
+    const { name, description, schedule } = req.body;
+    const classDoc = await Class.findById(req.params.id);
+    
+    if (!classDoc) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    
+    // Verify the teacher owns the class
+    if (!classDoc.teacher.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to edit this class' });
+    }
+
+    classDoc.name = name;
+    classDoc.description = description;
+    classDoc.schedule = schedule;
+    
+    await classDoc.save();
+    res.json(classDoc);
+  } catch (error) {
+    console.error('Error updating class:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/api/classes/:id', isAuthenticated, hasRole(['teacher']), async (req, res) => {
+  try {
+    const classDoc = await Class.findById(req.params.id);
+    
+    if (!classDoc) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    
+    // Verify the teacher owns the class
+    if (!classDoc.teacher.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to delete this class' });
+    }
+
+    // Delete all enrollments for this class
+    await Enrollment.deleteMany({ class: classDoc._id });
+    
+    // Delete all attendance records for this class
+    await Attendance.deleteMany({ class: classDoc._id });
+    
+    // Delete the class
+    await classDoc.delete();
+    
+    res.json({ message: 'Class deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting class:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Enrollment routes
+app.post('/api/enrollments', isAuthenticated, hasRole(['student']), async (req, res) => {
+  try {
+    const { classCode } = req.body;
+    const classToJoin = await Class.findOne({ code: classCode });
+    
+    if (!classToJoin) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    const enrollment = new Enrollment({
+      student: req.user._id,
+      class: classToJoin._id
+    });
+
+    await enrollment.save();
+    res.status(201).json(enrollment);
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400).json({ message: 'Already enrolled in this class' });
+    } else {
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+});
+
+// Attendance routes
+app.post('/api/attendance', isAuthenticated, hasRole(['student']), async (req, res) => {
+  try {
+    const { classId, location } = req.body;
+    
+    // Check if student is enrolled in the class
+    const enrollment = await Enrollment.findOne({
+      student: req.user._id,
+      class: classId,
+      status: 'active'
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({ message: 'Not enrolled in this class' });
+    }
+
+    const attendance = new Attendance({
+      student: req.user._id,
+      class: classId,
+      date: new Date(),
+      location
+    });
+
+    await attendance.save();
+    res.status(201).json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/api/attendance/:id', isAuthenticated, hasRole(['teacher']), async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    const attendance = await Attendance.findById(req.params.id);
+    
+    if (!attendance) {
+      return res.status(404).json({ message: 'Attendance record not found' });
+    }
+
+    // Verify the teacher owns the class
+    const classDoc = await Class.findById(attendance.class);
+    if (!classDoc.teacher.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to review this attendance' });
+    }
+
+    attendance.status = status;
+    attendance.notes = notes;
+    attendance.reviewedBy = req.user._id;
+    attendance.reviewTime = new Date();
+
+    await attendance.save();
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get pending attendance records for teacher's classes
+app.get('/api/attendance/pending', isAuthenticated, hasRole(['teacher']), async (req, res) => {
+  try {
+    const classes = await Class.find({ teacher: req.user._id });
+    const classIds = classes.map(c => c._id);
+    
+    const pendingAttendance = await Attendance.find({
+      class: { $in: classIds },
+      status: 'pending'
+    })
+    .populate('student', 'username firstName lastName')
+    .populate('class', 'name');
+
+    res.json(pendingAttendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get student's attendance history
+app.get('/api/attendance/history', isAuthenticated, hasRole(['student']), async (req, res) => {
+  try {
+    const attendance = await Attendance.find({ student: req.user._id })
+      .populate('class', 'name')
+      .sort({ date: -1 });
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all attendance records for teacher's classes
+app.get('/api/attendance/teacher-history', isAuthenticated, hasRole(['teacher']), async (req, res) => {
+  try {
+    const classes = await Class.find({ teacher: req.user._id });
+    const classIds = classes.map(c => c._id);
+    
+    const attendance = await Attendance.find({
+      class: { $in: classIds }
+    })
+    .populate('student', 'firstName lastName userId userName')
+    .populate('class', 'name')
+    .populate('reviewedBy', 'firstName lastName')
+    .sort({ date: -1 });
+
+    res.json(attendance);
+  } catch (error) {
+    console.error('Error fetching attendance history:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
